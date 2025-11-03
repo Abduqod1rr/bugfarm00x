@@ -21,4 +21,21 @@ urlpatterns = [
     path("toggle_like/<int:pk>", views.toggle_like, name="toggle_like"),
     path("add_comment/<int:pk>", views.CommentPoc.as_view(), name="add_comment")
      #
-]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
