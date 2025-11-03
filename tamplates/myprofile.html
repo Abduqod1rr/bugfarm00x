@@ -31,11 +31,10 @@
     <!-- Actions -->
     <div class="actions">
       <a href="{% url 'edit_profile' %}" class="btn edit">Edit Profile</a>
-      <form action="{% url 'logout' %}" method="post">
-      {% csrf_token %}
+        <form action="{% url 'logout' %}" method="post">
+        {% csrf_token %}
            <button type="submit">Logout</button>
         </form>
-
     </div>
 
     <!-- Gallery -->

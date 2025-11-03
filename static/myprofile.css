@@ -190,4 +190,53 @@ a:hover {
   background: #ff0044;
   color: white;
   transform: scale(1.05);
+}/* 🔹 Logout button (neon red-glow) */
+.actions form button {
+  background: linear-gradient(135deg, #ff3b3b, #ff5a5a);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s ease;
+  box-shadow: 0 0 12px rgba(255, 59, 59, 0.35);
+}
+
+.actions form button:hover {
+  background: linear-gradient(135deg, #ff5050, #ff7373);
+  transform: translateY(-2px);
+  box-shadow: 0 0 18px rgba(255, 59, 59, 0.5);
+}
+
+.actions form button:active {
+  transform: translateY(0);
+  box-shadow: 0 0 8px rgba(255, 59, 59, 0.4);
+}
+
+/* 🔸 Edit button (fiery orange-plasma tone) */
+.actions .btn.edit {
+  background: linear-gradient(135deg, #ff8c1a, #ff6a00);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: 0.3s ease;
+  box-shadow: 0 0 12px rgba(255, 100, 0, 0.35);
+}
+
+.actions .btn.edit:hover {
+  background: linear-gradient(135deg, #ff9933, #ff751a);
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(255, 120, 20, 0.55);
+}
+
+/* 🔸 Positioning & layout */
+.actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 15px;
 }
