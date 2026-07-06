@@ -1,0 +1,155 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hints — bugfarm00x</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a0a;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+    .container { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+    h1 { color: #ff375f; text-align: center; margin-bottom: 30px; }
+    details {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    details[open] { border-color: #ff375f44; }
+    summary {
+      padding: 16px 20px;
+      cursor: pointer;
+      font-weight: 600;
+      color: #ff375f;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after {
+      content: '+';
+      font-size: 1.2rem;
+      color: #666;
+      transition: 0.2s;
+    }
+    details[open] summary::after { content: '−'; }
+    details[open] summary { border-bottom: 1px solid #222; }
+    .hint-content {
+      padding: 16px 20px;
+      line-height: 1.7;
+      font-size: 0.95rem;
+    }
+    .hint-content code {
+      background: #1a1a1a;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #ff6b8a;
+      font-size: 0.9rem;
+    }
+    .hint-level {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      margin-top: 10px;
+    }
+    .hint-level.easy { background: #00cc6622; color: #00cc66; border: 1px solid #00cc6644; }
+    .hint-level.medium { background: #ffaa0022; color: #ffaa00; border: 1px solid #ffaa0044; }
+    .hint-level.hard { background: #ff375f22; color: #ff375f; border: 1px solid #ff375f44; }
+    .nav-links { text-align: center; margin-top: 30px; }
+    .nav-links a { color: #ff375f; text-decoration: none; margin: 0 12px; font-size: 0.9rem; }
+    .nav-links a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>💡 bugfarm00x Hints</h1>
+    <p style="text-align:center;opacity:0.6;margin-bottom:25px;">
+      Click each challenge to reveal hints. Try to find the bug before peeking!
+    </p>
+
+    <details>
+      <summary>#1 — SQL Injection</summary>
+      <div class="hint-content">
+        <p><strong>Hint 1:</strong> Look at how the login query is built in <code>main/views.py:UserLogin</code>. What happens if you type a <code>'</code> (single quote) in the username field?</p>
+        <p><strong>Hint 2:</strong> Can you make the <code>WHERE</code> clause always evaluate to true? Try: <code>' OR '1'='1</code> as the username.</p>
+        <p><strong>Hint 3:</strong> The query uses f-string interpolation. Any SQL you inject will be executed directly against the database.</p>
+        <span class="hint-level easy">Easy</span>
+      </div>
+    </details>
+
+    <details>
+      <summary>#2 — Reflected XSS</summary>
+      <div class="hint-content">
+        <p><strong>Hint 1:</strong> Check the search bar on the feed page. The query parameter <code>q</code> is rendered with <code>|safe</code>.</p>
+        <p><strong>Hint 2:</strong> Try entering: <code>&lt;script&gt;alert('XSS')&lt;/script&gt;</code> in the search box.</p>
+        <p><strong>Hint 3:</strong> The <code>|safe</code> filter in Django disables HTML escaping — user input is rendered as raw HTML.</p>
+        <span class="hint-level easy">Easy</span>
+      </div>
+    </details>
+
+    <details>
+      <summary>#3 — IDOR</summary>
+      <div class="hint-content">
+        <p><strong>Hint 1:</strong> There are two profile views. One is safe, the other isn't. Compare <code>MyProfile</code> and <code>UserProfile</code> in <code>main/views.py</code>.</p>
+        <p><strong>Hint 2:</strong> The <code>UserProfile</code> view accepts a <code>pk</code> parameter from the URL but never checks if it belongs to the current user.</p>
+        <p><strong>Hint 3:</strong> Try accessing <code>/profile/1/</code> while logged in as a different user. Can you see their profile?</p>
+        <span class="hint-level medium">Medium</span>
+      </div>
+    </details>
+
+    <details>
+      <summary>#4 — Unrestricted File Upload</summary>
+      <div class="hint-content">
+        <p><strong>Hint 1:</strong> Look at the <code>Poc</code> model — the <code>content</code> field uses <code>FileField</code> with no validation.</p>
+        <p><strong>Hint 2:</strong> Can you upload a <code>.py</code> file or an executable? What about an <code>.html</code> file with embedded scripts?</p>
+        <p><strong>Hint 3:</strong> Uploaded files are stored under <code>/media/picpokcontent/</code> and served directly without any type checking.</p>
+        <span class="hint-level medium">Medium</span>
+      </div>
+    </details>
+
+    <details>
+      <summary>#5 — Open Redirect</summary>
+      <div class="hint-content">
+        <p><strong>Hint 1:</strong> After a successful login, the <code>next</code> parameter is checked. Where does it redirect to?</p>
+        <p><strong>Hint 2:</strong> Try: <code>/login/?next=https://evil.com</code> — if you log in successfully, where do you end up?</p>
+        <p><strong>Hint 3:</strong> No allowlist is used — any URL, including external domains, is accepted.</p>
+        <span class="hint-level easy">Easy</span>
+      </div>
+    </details>
+
+    <details>
+      <summary>#6 — Information Disclosure</summary>
+      <div class="hint-content">
+        <p><strong>Hint 1:</strong> Check <code>picpok/settings.py</code> — what is <code>DEBUG</code> set to?</p>
+        <p><strong>Hint 2:</strong> Visit a non-existent page like <code>/nonexistent</code> or trigger an error. What information is revealed?</p>
+        <p><strong>Hint 3:</strong> Stack traces show file paths, line numbers, local variables, and even source code snippets.</p>
+        <span class="hint-level easy">Easy</span>
+      </div>
+    </details>
+
+    <details>
+      <summary>#7 — Weak Password Storage</summary>
+      <div class="hint-content">
+        <p><strong>Hint 1:</strong> Look at <code>main/forms.py</code> — how is the password saved in the <code>save()</code> method?</p>
+        <p><strong>Hint 2:</strong> NOTICE: the password is stored directly without hashing. Check the database: <code>SELECT password FROM auth_user;</code></p>
+        <p><strong>Hint 3:</strong> Combine this with the SQL injection vulnerability — can you extract plaintext passwords from the database?</p>
+        <span class="hint-level hard">Hard</span>
+      </div>
+    </details>
+
+    <div class="nav-links">
+      <a href="{% url 'landing' %}">← Home</a>
+      <a href="{% url 'scoreboard' %}">🏆 Scoreboard</a>
+      <a href="{% url 'solutions' %}">🔧 Solutions</a>
+    </div>
+  </div>
+</body>
+</html>

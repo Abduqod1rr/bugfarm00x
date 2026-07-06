@@ -10,6 +10,7 @@ env/
 ENV/
 env.bak/
 venv.bak/
+bvnv/
 
 # ---- Build / Packaging ----
 build/
@@ -43,12 +44,12 @@ db.sqlite3
 *.sqlite3
 media/
 staticfiles/
+static_collected/
 instance/
 uploads/
 
 # ---- SECURITY / SETTINGS ----
 # ❗ Never commit your sensitive configs
-settings.py
 local_settings.py
 config.py
 secrets.py

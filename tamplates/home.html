@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>PicPok | Home</title>
+  <title>bugfarm00x | Feed</title>
   <link rel="stylesheet" href="{% static 'home.css' %}">
   <style>
     body {
@@ -30,6 +30,7 @@
     .logo { font-weight: bold; font-size: 1.4rem; color: #ff375f; }
     .nav-links a { color: #fff; text-decoration: none; margin-left: 20px; }
     .nav-links a:hover { color: #ff375f; }
+    .nav-links .bugfarm-badge { color: #999; font-size: 0.8rem; margin-left: 20px; }
 
     .search-container { margin-top: 80px; text-align: center; padding: 10px; }
     .search-container input {
@@ -132,20 +133,26 @@
 </head>
 <body>
   <nav>
-    <div class="logo">picpok</div>
+    <div class="logo">🐛 bugfarm00x</div>
     <div class="nav-links">
-      <a href="{% url 'home' %}">Home</a>
+      <a href="{% url 'feed' %}">Feed</a>
       <a href="{% url 'addpoc' %}">Add</a>
       <a href="{% url 'mypocs' %}">My Posts</a>
       <a href="{% url 'myprofile' %}">Profile</a>
+      <a href="{% url 'scoreboard' %}">🏆 Score</a>
+      <a href="{% url 'hints' %}">💡 Hints</a>
       <a href="{% url 'logout' %}">Logout</a>
+      <span class="bugfarm-badge">vulnerable</span>
     </div>
   </nav>
 
   <div class="search-container">
     <form method="get">
-      <input type="text" name="q" placeholder="Search posts..." value="{{ request.GET.q }}">
+      {# VULN: XSS - query parameter rendered without escaping #}
+      <input type="text" name="q" placeholder="Search posts..." value="{{ request.GET.q|safe }}">
     </form>
+    {# VULN: XSS - query displayed directly as HTML without escaping #}
+    <div>Search results for: {{ request.GET.q|safe }}</div>
   </div>
 
   {% for poc in pocs %}

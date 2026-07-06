@@ -1,0 +1,315 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solutions — bugfarm00x</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a0a;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+    .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+    h1 { color: #ff375f; text-align: center; margin-bottom: 30px; }
+    .solution-card {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 12px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+    .solution-card h2 {
+      background: #1a1a2e;
+      padding: 16px 20px;
+      font-size: 1.1rem;
+      color: #ff375f;
+      border-bottom: 1px solid #222;
+    }
+    .solution-body { padding: 20px; line-height: 1.7; }
+    .solution-body h3 {
+      color: #ff6b8a;
+      margin: 16px 0 8px;
+      font-size: 1rem;
+    }
+    .solution-body h3:first-child { margin-top: 0; }
+    .solution-body p { margin-bottom: 10px; opacity: 0.9; }
+    .solution-body ul { margin: 8px 0 12px 20px; opacity: 0.9; }
+    .solution-body li { margin-bottom: 4px; }
+    code {
+      background: #1a1a1a;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #ff6b8a;
+      font-size: 0.9rem;
+    }
+    pre {
+      background: #0d0d0d;
+      border: 1px solid #222;
+      border-radius: 8px;
+      padding: 14px 18px;
+      overflow-x: auto;
+      margin: 12px 0;
+      font-size: 0.85rem;
+      color: #a8d8a8;
+    }
+    pre .comment { color: #666; }
+    pre .vuln { color: #ff6b8a; }
+    pre .fix { color: #6bff8a; }
+    .vuln-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      background: #ff375f22;
+      border: 1px solid #ff375f44;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      color: #ff375f;
+      margin-bottom: 10px;
+    }
+    .fix-box {
+      background: #0a1a0a;
+      border-left: 4px solid #00cc66;
+      padding: 14px 18px;
+      border-radius: 0 8px 8px 0;
+      margin: 12px 0;
+    }
+    .nav-links { text-align: center; margin-top: 30px; }
+    .nav-links a { color: #ff375f; text-decoration: none; margin: 0 12px; font-size: 0.9rem; }
+    .nav-links a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔧 bugfarm00x Solutions</h1>
+    <p style="text-align:center;opacity:0.6;margin-bottom:25px;">
+      How to identify and fix each vulnerability.
+    </p>
+
+    <!-- 1 - SQLi -->
+    <div class="solution-card">
+      <h2>#1 — SQL Injection</h2>
+      <div class="solution-body">
+        <span class="vuln-badge">SQLi</span>
+        <h3>🕵️ How to find it</h3>
+        <p>In <code>main/views.py:UserLogin</code>, the login query is built using an f-string:</p>
+        <pre><span class="vuln">query = f"SELECT id FROM auth_user WHERE username = '{username}' AND password = '{password}'"</span></pre>
+        <p>User input is directly concatenated into the SQL statement with no sanitization or parameterization.</p>
+
+        <h3>⚔️ Exploitation</h3>
+        <p>Enter <code>' OR '1'='1</code> as the username and anything as the password. The query becomes:</p>
+        <pre>SELECT id FROM auth_user WHERE username = '' OR '1'='1' AND password = 'x'</pre>
+        <p>Since <code>'1'='1'</code> is always true, the query returns the first user (often admin), logging you in without knowing their password.</p>
+
+        <h3>🛠️ The Fix</h3>
+        <div class="fix-box">
+          <p>Use parameterized queries to separate SQL logic from data:</p>
+          <pre><span class="fix">cursor.execute(
+    "SELECT id FROM auth_user WHERE username = %s AND password = %s",
+    [username, password]
+)</span></pre>
+          <p>Or better yet, use Django's ORM which handles this automatically:</p>
+          <pre><span class="fix">user = authenticate(request, username=username, password=password)</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2 - XSS -->
+    <div class="solution-card">
+      <h2>#2 — Reflected XSS</h2>
+      <div class="solution-body">
+        <span class="vuln-badge">XSS</span>
+        <h3>🕵️ How to find it</h3>
+        <p>In <code>tamplates/home.html</code>, the search query is rendered with the <code>|safe</code> filter:</p>
+        <pre><span class="vuln">&lt;input ... value="{{ request.GET.q|safe }}"&gt;</span></pre>
+        <p>Django normally auto-escapes HTML in template variables. The <code>|safe</code> filter disables escaping, allowing arbitrary HTML/JavaScript injection.</p>
+
+        <h3>⚔️ Exploitation</h3>
+        <p>Visit <code>/feed/?q=&lt;script&gt;alert(document.cookie)&lt;/script&gt;</code></p>
+
+        <h3>🛠️ The Fix</h3>
+        <div class="fix-box">
+          <p>Remove the <code>|safe</code> filter — Django's default auto-escaping handles XSS:</p>
+          <pre><span class="fix">&lt;input ... value="{{ request.GET.q }}"&gt;</span></pre>
+          <p>If you must allow some HTML, use a sanitization library like <code>bleach</code> instead.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 - IDOR -->
+    <div class="solution-card">
+      <h2>#3 — Insecure Direct Object Reference (IDOR)</h2>
+      <div class="solution-body">
+        <span class="vuln-badge">IDOR</span>
+        <h3>🕵️ How to find it</h3>
+        <p>In <code>main/views.py:UserProfile</code>, there's a detail view that takes a <code>pk</code> from the URL:</p>
+        <pre><span class="vuln">class UserProfile(LoginRequiredMixin, DetailView):
+    model = Profile
+    ...</span></pre>
+        <p>Compare with <code>MyProfile</code> which always returns the current user's profile via <code>get_object()</code> — <code>UserProfile</code> has no such check.</p>
+
+        <h3>⚔️ Exploitation</h3>
+        <p>Access <code>/profile/1/</code> while logged in as a different user. You can view any user's profile by changing the ID.</p>
+
+        <h3>🛠️ The Fix</h3>
+        <div class="fix-box">
+          <p>Add an ownership check in the view:</p>
+          <pre><span class="fix">class UserProfile(LoginRequiredMixin, DetailView):
+    model = Profile
+    template_name = 'myprofile.html'
+    context_object_name = 'profile'
+
+    def get_object(self):
+        profile = super().get_object()
+        <span class="comment"># VULN FIXED: verify ownership</span>
+        if profile.user != self.request.user:
+            raise Http404("Profile not found")
+        return profile</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 - File Upload -->
+    <div class="solution-card">
+      <h2>#4 — Unrestricted File Upload</h2>
+      <div class="solution-body">
+        <span class="vuln-badge">Unrestricted Upload</span>
+        <h3>🕵️ How to find it</h3>
+        <p>In <code>main/models.py</code>, the <code>Poc.content</code> field uses <code>FileField</code> with no validation:</p>
+        <pre><span class="vuln">content = models.FileField(upload_to='picpokcontent')</span></pre>
+        <p>No file type, size, or content validation is performed during upload.</p>
+
+        <h3>⚔️ Exploitation</h3>
+        <p>Upload a <code>.html</code> file with embedded JavaScript, a <code>.py</code> file, or any executable. The file is stored under <code>/media/picpokcontent/</code> and served directly.</p>
+
+        <h3>🛠️ The Fix</h3>
+        <div class="fix-box">
+          <p>Validate file type and content in the form or view:</p>
+          <pre><span class="fix">import magic
+
+def clean_content(self):
+    file = self.cleaned_data['content']
+    allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4']
+    mime = magic.from_buffer(file.read(1024), mime=True)
+    if mime not in allowed_types:
+        raise forms.ValidationError('Invalid file type')
+    if file.size > 10 * 1024 * 1024:  # 10MB
+        raise forms.ValidationError('File too large')
+    return file</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 - Open Redirect -->
+    <div class="solution-card">
+      <h2>#5 — Open Redirect</h2>
+      <div class="solution-body">
+        <span class="vuln-badge">Open Redirect</span>
+        <h3>🕵️ How to find it</h3>
+        <p>In <code>main/views.py:UserLogin</code>, after successful login:</p>
+        <pre><span class="vuln">next_url = request.GET.get('next')
+if next_url:
+    return redirect(next_url)</span></pre>
+        <p>No validation is performed on the redirect target — it accepts any URL, including external domains.</p>
+
+        <h3>⚔️ Exploitation</h3>
+        <p>Send a victim: <code>/login/?next=https://evil.com/phish</code>. After login, they're redirected to the attacker's site.</p>
+
+        <h3>🛠️ The Fix</h3>
+        <div class="fix-box">
+          <p>Validate the redirect URL using Django's built-in <code>url_has_allowed_host_and_scheme</code>:</p>
+          <pre><span class="fix">from django.utils.http import url_has_allowed_host_and_scheme
+
+next_url = request.GET.get('next')
+if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+    return redirect(next_url)
+else:
+    return redirect('createprofile')</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6 - Info Disclosure -->
+    <div class="solution-card">
+      <h2>#6 — Information Disclosure</h2>
+      <div class="solution-body">
+        <span class="vuln-badge">Debug Mode</span>
+        <h3>🕵️ How to find it</h3>
+        <p>In <code>picpok/settings.py</code>:</p>
+        <pre><span class="vuln">DEBUG = True</span></pre>
+        <p>When <code>DEBUG=True</code>, Django displays detailed error pages with stack traces, local variables, settings, and source code snippets.</p>
+
+        <h3>⚔️ Exploitation</h3>
+        <p>Visit a non-existent URL like <code>/nonexistent</code> or trigger an exception. The debug page reveals file paths, database configuration, and application internals.</p>
+
+        <h3>🛠️ The Fix</h3>
+        <div class="fix-box">
+          <p>Set <code>DEBUG = False</code> in production and configure proper error logging:</p>
+          <pre><span class="fix">DEBUG = False
+ALLOWED_HOSTS = ['your-domain.com']
+
+<span class="comment"># Configure logging instead</span>
+LOGGING = {
+    'version': 1,
+    'handlers': {
+        'file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': 'django-errors.log',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'ERROR',
+        },
+    },
+}</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7 - Weak Crypto -->
+    <div class="solution-card">
+      <h2>#7 — Weak Password Storage</h2>
+      <div class="solution-body">
+        <span class="vuln-badge">Weak Crypto</span>
+        <h3>🕵️ How to find it</h3>
+        <p>In <code>main/forms.py</code>:</p>
+        <pre><span class="vuln">def save(self, commit=True):
+    user = super().save(commit=False)
+    user.password = self.cleaned_data['password1']  <span class="comment"># plaintext!</span>
+    if commit:
+        user.save()
+    return user</span></pre>
+        <p>Instead of calling <code>set_password()</code> (which hashes), the form stores the password verbatim.</p>
+
+        <h3>⚔️ Exploitation</h3>
+        <p>Check the database directly (via SQLi or shell access):</p>
+        <pre>SELECT username, password FROM auth_user;
+ demo    | demo1234
+ admin   | password123</pre>
+
+        <h3>🛠️ The Fix</h3>
+        <div class="fix-box">
+          <p>Use Django's built-in <code>set_password()</code> which applies PBKDF2 hashing:</p>
+          <pre><span class="fix">def save(self, commit=True):
+    user = super().save(commit=False)
+    user.set_password(self.cleaned_data['password1'])  <span class="comment"># hashes with PBKDF2</span>
+    if commit:
+        user.save()
+    return user</span></pre>
+          <p>Or simply use Django's <code>UserCreationForm</code> without overriding <code>save()</code> — it handles hashing automatically.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-links">
+      <a href="{% url 'landing' %}">← Home</a>
+      <a href="{% url 'scoreboard' %}">🏆 Scoreboard</a>
+      <a href="{% url 'hints' %}">💡 Hints</a>
+    </div>
+  </div>
+</body>
+</html>

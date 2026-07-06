@@ -1,0 +1,125 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scoreboard — bugfarm00x</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a0a;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+    .container { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+    h1 { color: #ff375f; text-align: center; font-size: 2rem; margin-bottom: 8px; }
+    .subtitle { text-align: center; opacity: 0.6; margin-bottom: 30px; }
+    .progress-bar {
+      background: #222;
+      border-radius: 20px;
+      height: 14px;
+      margin-bottom: 30px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff375f, #ff6b8a);
+      border-radius: 20px;
+      transition: width 0.5s;
+      width: {{ found_ids|length|default:0 }}%;
+    }
+    .progress-fill { width: {% widthratio found_ids|length 7 100 %}%; }
+    .bug-list { display: flex; flex-direction: column; gap: 10px; }
+    .bug-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 10px;
+      padding: 16px 20px;
+      transition: 0.2s;
+    }
+    .bug-item.found { border-color: #00cc66; }
+    .bug-item .left { display: flex; align-items: center; gap: 12px; }
+    .bug-item .icon {
+      font-size: 1.3rem;
+      width: 32px;
+      text-align: center;
+    }
+    .bug-item .icon.found-icon { color: #00cc66; }
+    .bug-item .icon.missing-icon { color: #555; }
+    .bug-item .name { font-weight: 600; }
+    .bug-item .desc { font-size: 0.85rem; opacity: 0.6; }
+    .btn-found {
+      padding: 6px 16px;
+      border: 1px solid #00cc66;
+      background: transparent;
+      color: #00cc66;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      text-decoration: none;
+    }
+    .btn-found:hover { background: #00cc6611; }
+    .btn-found.done {
+      background: #00cc66;
+      color: #000;
+      cursor: default;
+      pointer-events: none;
+    }
+    .nav-links {
+      text-align: center;
+      margin-top: 30px;
+    }
+    .nav-links a {
+      color: #ff375f;
+      text-decoration: none;
+      margin: 0 12px;
+      font-size: 0.9rem;
+    }
+    .nav-links a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🏆 bugfarm00x Scoreboard</h1>
+    <p class="subtitle">Track which vulnerabilities you've discovered</p>
+
+    <div class="progress-bar">
+      <div class="progress-fill"></div>
+    </div>
+    <p style="text-align:center;margin-bottom:20px;opacity:0.7;">
+      {{ found_ids|length }} / 7 bugs found
+    </p>
+
+    <div class="bug-list">
+      {% for bug_id, label in bug_labels.items %}
+        <div class="bug-item {% if bug_id in found_ids %}found{% endif %}">
+          <div class="left">
+            <span class="icon {% if bug_id in found_ids %}found-icon{% else %}missing-icon{% endif %}">
+              {% if bug_id in found_ids %}✅{% else %}⬜{% endif %}
+            </span>
+            <div>
+              <div class="name">{{ label }}</div>
+              <div class="desc">bugfarm00x Challenge</div>
+            </div>
+          </div>
+          {% if bug_id in found_ids %}
+            <span class="btn-found done">Found ✓</span>
+          {% else %}
+            <a href="{% url 'mark_found' bug_id %}" class="btn-found">Mark Found</a>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="nav-links">
+      <a href="{% url 'feed' %}">← Back to Feed</a>
+      <a href="{% url 'hints' %}">💡 Hints</a>
+      <a href="{% url 'solutions' %}">🔧 Solutions</a>
+    </div>
+  </div>
+</body>
+</html>

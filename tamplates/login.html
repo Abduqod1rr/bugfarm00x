@@ -4,21 +4,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login | PicPok</title>
+  <title>Login | bugfarm00x</title>
   <link rel="stylesheet" href="{% static 'login.css' %}">
 </head>
 <body>
   <div class="login-container">
-    <div class="logo">PicPok</div>
-    <h2>Welcome Back</h2>
-    <form method="post" class="login-form">
-      {% csrf_token %}
-      <p><input type="text" name="username" placeholder="Username" required></p>
+    <div class="logo">🐛 bugfarm00x</div>
+    <h2>Challenge #1 — SQL Injection</h2>
+    <p style="opacity:0.6;margin-bottom:15px;font-size:0.9rem;">Try to log in without knowing a password</p>
+      <form method="post" class="login-form">
+        {% csrf_token %}
+        {# VULN: Open redirect - next parameter accepted without validation #}
+        <input type="hidden" name="next" value="{{ request.GET.next }}">
+        <p><input type="text" name="username" placeholder="Username" required></p>
       <p><input type="password" name="password" placeholder="Password" required></p>
       <button type="submit">Login</button>
     </form>
     <div class="register-link">
       Don’t have an account? <a href="{% url 'register' %}">Register</a>
+    </div>
+    <div style="text-align:center;margin-top:12px;">
+      <a href="{% url 'landing' %}" style="color:#666;font-size:0.85rem;text-decoration:none;">← Back to bugfarm00x</a>
     </div>
   </div>
 </body>

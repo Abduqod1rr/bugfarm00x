@@ -33,3 +33,24 @@ class Profile(models.Model):
         
     def __str__(self):
         return self.user
+
+
+class BugProgress(models.Model):
+    BUG_CHOICES = [
+        ('sqli', 'SQL Injection'),
+        ('xss', 'Reflected XSS'),
+        ('idor', 'IDOR'),
+        ('file_upload', 'Unrestricted File Upload'),
+        ('open_redirect', 'Open Redirect'),
+        ('info_disclosure', 'Information Disclosure'),
+        ('weak_crypto', 'Weak Password Storage'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    bug_id = models.CharField(max_length=20, choices=BUG_CHOICES)
+    found_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'bug_id')
+
+    def __str__(self):
+        return f"{self.user.username} found {self.get_bug_id_display()}"
