@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 
 class Poc(models.Model):
     title=models.CharField(max_length=20,default='no title')
-    content=models.FileField(upload_to='picpokcontent')
+    content=models.FileField(upload_to='picpokcontent', blank=True, default='picpokcontent/Google Dino Online.jpeg')
     owner=models.ForeignKey(User,on_delete=models.CASCADE)
     created_at=models.DateTimeField(auto_now_add=True)
     like=models.ManyToManyField(User,related_name='liked_poc')
@@ -26,7 +26,7 @@ class Comment(models.Model):
 class Profile(models.Model):
     user=models.ForeignKey(User, on_delete=models.CASCADE)
     bio=models.CharField(max_length=50,default='nothing')
-    picture=models.ImageField(default='profile_pictures/default.png',upload_to='profile_pictures')
+    picture=models.ImageField(default='profile_pictures/Google Dino Online.jpeg',upload_to='profile_pictures')
  
     class Meta:
         unique_together = ('user',)

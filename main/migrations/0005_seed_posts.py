@@ -1,5 +1,6 @@
+import os
 from django.db import migrations
-from django.core.files.base import ContentFile
+from django.core.files import File
 
 
 def create_seed_posts(apps, schema_editor):
@@ -21,11 +22,13 @@ def create_seed_posts(apps, schema_editor):
         'PicPok rocks!',
     ]
 
+    dino_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'Google Dino Online.jpeg')
+
     for i, title in enumerate(seed_posts, 1):
         if not Poc.objects.filter(title=title, owner=demo_user).exists():
             poc = Poc(title=title, owner=demo_user)
-            filename = f'seed_post_{i}.txt'
-            poc.content.save(filename, ContentFile(f'Content for: {title}'), save=True)
+            with open(dino_path, 'rb') as f:
+                poc.content.save(f'seed_post_{i}.jpeg', File(f), save=True)
 
 
 def remove_seed_posts(apps, schema_editor):
